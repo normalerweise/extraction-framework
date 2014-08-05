@@ -61,7 +61,7 @@ class ParserUtils( val context : { def language : Language } )
 
 
   // TODO rename -> normalize number with surface string info
-    def convertLargeNumbersWithSurfaceStringInfo(input : String) : (String, String) =
+    def convertLargeNumbersWithSurfaceStringInfo(input : String, knownScale: Option[Int] = None ) : (String, String) =
      {
       val _match = regex.findFirstMatchIn(input)
        if(_match.isDefined) {
@@ -76,11 +76,21 @@ class ParserUtils( val context : { def language : Language } )
         // default decimal/grouping seaprators don't help as not all values follow the current language
         // 5.000 -> in most cases integer
         // 5.000 billion -> in most cases double
-         if(scale != null) {
-           val integerComponents = integer.split(englishGroupingSeparatorRegexStr)
+         if(scale != null || knownScale.isDefined) {
            // numer like 5.000 and not 5.000.000  and the last thouthands separator is .
-           if(integerComponents.length == 2 && integer.charAt(integer.length - 4) == defaultDecimalSeparator){
-             //swap thousands group to fraction
+           val separators = englishGroupingSeparatorRegex.findAllMatchIn(integer).toSeq
+           val (sepsAreEqual, lastSep, count) = separators.foldLeft[Triple[Boolean, Option[String], Int]]((true, None, 0)) { (agg, sepMatch) =>
+             if(agg._2.isEmpty)
+               (true, Some(sepMatch.group(0)), 1)
+             else
+               (agg._2.get == sepMatch.group(0), Some(sepMatch.group(0)), agg._3 + 1)
+           }
+           // 5.000.000 billion -> in most cases integer
+           // 5,000.000 billion -> in most cases double
+           // 5,000,000 billion -> in most cases integer
+           if((count == 1 && lastSep.get == defaultDecimalSeparator.toString) ||
+              (count > 1 && !sepsAreEqual && lastSep.get == defaultDecimalSeparator.toString)) {
+             //swap last thousands group to fraction
              val oldInteger = integer
              integer = oldInteger.substring(0,oldInteger.length - 4)
              fract = oldInteger.substring(oldInteger.length - 4)
@@ -89,7 +99,7 @@ class ParserUtils( val context : { def language : Language } )
 
         var fractLength = if(fract != null) fract.substring(1).length else 0
         val fractStr = if(fract != null) fract.substring(1) else ""
-        val scaleMagnitude = if(scale != null) scales(scale.trim.toLowerCase) else -1
+        val scaleMagnitude = if(knownScale.isDefined) knownScale.get else if(scale != null) scales(scale.trim.toLowerCase) else -1
 
         val fractionAndTrailingZerosPart =
           if(fractLength == 0 && scaleMagnitude == -1) {
@@ -105,7 +115,7 @@ class ParserUtils( val context : { def language : Language } )
 
         val inputWithNewValue = begin + normalizedInteger + fractionAndTrailingZerosPart + end
 
-        val scaleStr = if(scale != null) scale else ""
+        val scaleStr = if(knownScale.isDefined) "" else if(scale != null) scale else ""
         val fracWithThouthandsSep = if(fract != null) fract else ""
         val surfaceString = integer + fracWithThouthandsSep + scaleStr
 

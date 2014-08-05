@@ -249,7 +249,7 @@ class CustomUnitValueParser( extractionContext : {
         }
         
         originalValueString = Some(rupee_value)
-        value = Some(rupee_value.trim + ("0" * dimension))
+        value = Some(parserUtils.convertLargeNumbersWithSurfaceStringInfo(rupee_value, Some(dimension))._1)
         unit = Some("INR") // set to indian rupee as implicitly defined by template
 
       }

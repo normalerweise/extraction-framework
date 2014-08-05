@@ -181,7 +181,7 @@ class SimplePropertyMapping(
               writeTemporalValue(value, subjectUri, propertyNode.sourceUri, timexes)
             case (Some(value), Some(timexes: (Option[String],Option[String]))) =>
               writeTemporalValue(value, subjectUri, propertyNode.sourceUri, timexes)
-              
+
             case _ => Seq.empty[Quad]
           }
            propertyNodeGraph ++= g
