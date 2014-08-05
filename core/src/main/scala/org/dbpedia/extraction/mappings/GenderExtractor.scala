@@ -18,7 +18,7 @@ class GenderExtractor(
     def ontology : Ontology
     def language : Language
     def redirects : Redirects 
-  } 
+  }
 ) 
 extends MappingExtractor(context)
 {

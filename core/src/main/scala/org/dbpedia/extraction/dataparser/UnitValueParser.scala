@@ -1,7 +1,6 @@
 package org.dbpedia.extraction.dataparser
 
 import org.dbpedia.extraction.ontology.datatypes.{Datatype, DimensionDatatype, UnitDatatype}
-
 import org.dbpedia.extraction.wikiparser._
 import java.text.ParseException
 import java.util.logging.{Level, Logger}
@@ -11,6 +10,7 @@ import org.dbpedia.extraction.mappings.Redirects
 import java.lang.Double
 import org.dbpedia.extraction.config.dataparser.DataParserConfig
 import scala.language.reflectiveCalls
+import ch.weisenburger.dbpedia.extraction.mappings.CustomUnitValueCustomStringParser
 
 class UnitValueParser( extractionContext : {
                            def ontology : Ontology
@@ -52,6 +52,7 @@ class UnitValueParser( extractionContext : {
     private val ValueRegex2 = ("""(?iu)""" + prefix + """(-?\,?[0-9]+(?:[\. ][0-9]{3})*(?:\,[0-9]+)?)""" + postfix).r
 
     private val UnitRegex = ("""(?iu)""" + """(?<!\w)(""" + unitRegexLabels + """)(?!/)(?!\\)(?!\w)(?!\d)""").r
+    private val CustomUnitRegex = (""".*(""" + unitRegexLabels + """).*""").r
     
     /** Merging strings with feet and inches: 'x ft y in' and convert them into centimetres */
     private val UnitValueRegex1a = ("""(?iu)""" + prefix + """(-?[0-9]+)\040*(?:ft|feet|foot|\047|\054|\140)\040*([0-9]+)\040*(?:in\b|inch\b|inches\b|\047\047|\054\054|\140\140\042)""" + postfix).r
@@ -86,6 +87,7 @@ class UnitValueParser( extractionContext : {
 
     private val PrefixUnitValueRegex2 = ("""(?iu)""" + prefix + """(""" + unitRegexLabels + """)\]?\]?\040*(?<!-)([\-0-9]+(?:\.[0-9]{3})*(?:\,[0-9]+)?)""" + postfix).r
 
+   
     override def parse(node : Node) : Option[(Double, UnitDatatype)] =
     {
         val errors = if(logger.isLoggable(Level.FINE)) Some(new ParsingErrors()) else None
@@ -94,8 +96,9 @@ class UnitValueParser( extractionContext : {
         {
             return Some(result)
         }
-
-        for(parseResult <- StringParser.parse(node))
+        
+        // Use custom string parser to avoid empty strings in case of nowrap templates
+        for(parseResult <- CustomUnitValueCustomStringParser.parse(node))
         {
             val text = parserUtils.convertLargeNumbers(parseResult)
 
@@ -111,7 +114,14 @@ class UnitValueParser( extractionContext : {
                 case Some(result) => return Some(result)
                 case None =>
                 {
-                    //No unit value found
+                  // Do some crazy stuff nobody did before :-)  
+                   for( value <- catchValue(text);
+                         unit <- catchUnitCustom(text);
+                       result <- generateOutput(value, Some(unit), errors)) {
+                     return Some(result)
+                   } 
+                  
+                  //No unit value found
                     if(inputDatatype.isInstanceOf[UnitDatatype])
                     {
                         for( value <- catchValue(text);
@@ -134,6 +144,11 @@ class UnitValueParser( extractionContext : {
         }
 
         None
+    }
+    
+    private def catchUnitCustom(input : String) : Option[String] = input match {
+      case CustomUnitRegex(value) => Some(value)
+      case _ => None
     }
 
     /**
@@ -482,7 +497,7 @@ class UnitValueParser( extractionContext : {
      */
     private def generateOutput(valueString : String, unitString : Option[String] = None, errors : Option[ParsingErrors]) : Option[(Double, UnitDatatype)] =
     {
-        val value = 
+        val doubleValue = 
         {
             try
             {
@@ -504,34 +519,28 @@ class UnitValueParser( extractionContext : {
             // The unit is explicitly provided
             case Some(unitName) => inputDatatype match
             {
-                //first match case-sensitive so that MW matches and is not equivalent to mW
-                case inputUnit : UnitDatatype => inputUnit.dimension.unit(unitName) match
+                // We are matching using case-insensitive regexes hence we must lowercase the unit name
+                // to be consistent
+                case inputUnit : UnitDatatype => inputUnit.dimension.unit(unitName.toLowerCase) match
                 {
                     case Some(unit) => unit
-                    //only then case-insensitive to catch possible case mismatches such as Km i/o km
-                    case None => inputUnit.dimension.unit(unitName.toLowerCase) match
+                    case None =>
                     {
-                        case Some(unit) => unit
-                        case None =>
-                        {
-                            errors.foreach(_.add("Given unit '" + unitName + "' not found"))
-                            return None
-                        }
+                        errors.foreach(_.add("Given unit '" + unitName + "' not found"))
+                        return None
                     }
                 }
-                //first match case-sensitive so that MW matches and is not equivalent to mW
-                case inputDimension : DimensionDatatype => inputDimension.unit(unitName) match
+                // We are matching using case-insensitive regexes hence we must lowercase the unit name
+                // to be consistent
+                case inputDimension : DimensionDatatype => (inputDimension.unit(unitName.toLowerCase),inputDimension.unit(unitName)) match
                 {
-                    case Some(unit) => unit
-                    //only then case-insensitive to catch possible case mismatches such as Km i/o km
-                    case None => inputDimension.unit(unitName.toLowerCase) match
+                    case (None,Some(unit)) => unit
+                    case (Some(unit),None) => unit
+                    case (Some(unit),Some(_)) => unit // we take the one originaly intendend by the author
+                    case (None, None) =>
                     {
-                        case Some(unit) => unit
-                        case None =>
-                        {
-                            errors.foreach(_.add("Given unit '" + unitName + "' not found in dimension " + inputDimension))
-                            return None
-                        }
+                        errors.foreach(_.add("Given unit '" + unitName + "' not found in dimension " + inputDimension))
+                        return None
                     }
                 }
                 case _ => throw new Exception("Unexpected input datatype")
@@ -548,7 +557,7 @@ class UnitValueParser( extractionContext : {
             }
         }
 
-        Some(value, valueUnit)
+        Some(doubleValue, valueUnit)
     }
 }
 

@@ -1,10 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?><mediawiki xmlns="http://www.mediawiki.org/xml/export-0.8/"><page><title>Mapping de:Burgen-austria</title><ns>208</ns><id>9196</id><revision><id>31935</id><timestamp>2014-02-18T13:32:57Z</timestamp><text>{{TemplateMapping
-| mapToClass = owl:Thing
-| mappings =
-{{PropertyMapping | templateProperty = id | ontologyProperty = id }}
-{{ PropertyMapping | templateProperty = name | ontologyProperty = foaf:name }}
-
-}}</text></revision></page><page><title>Mapping de:Coordinate</title><ns>208</ns><id>5232</id><revision><id>31694</id><timestamp>2014-02-10T17:45:39Z</timestamp><text>{{ConditionalMapping
 | cases =
 
 {{Condition
@@ -667,11 +660,6 @@ Noch nicht gemappt:
        {{ PropertyMapping | templateProperty = unentschieden | ontologyProperty = }}
        {{ PropertyMapping | templateProperty = keine_wertung | ontologyProperty = }}
        {{ PropertyMapping | templateProperty = boxrec_id | ontologyProperty = }}
---&gt;</text></revision></page><page><title>Mapping de:Infobox Brauner Zwerg</title><ns>208</ns><id>9180</id><revision><id>31866</id><timestamp>2014-02-13T23:43:26Z</timestamp><text>{{TemplateMapping
-| mapToClass = BrownDwarf
-| mappings =
-{{PropertyMapping | templateProperty = name | ontologyProperty = foaf:name }}
-{{PropertyMapping | templateProperty = Absolut-vis | ontologyProperty = absoluteMagnitude }}
 }}</text></revision></page><page><title>Mapping de:Infobox Brücke</title><ns>208</ns><id>9152</id><revision><id>35092</id><timestamp>2014-06-04T08:48:40Z</timestamp><text>{{TemplateMapping
 | mapToClass = Bridge
 | mappings =

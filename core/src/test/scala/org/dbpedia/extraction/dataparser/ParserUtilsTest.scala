@@ -9,6 +9,7 @@ class ParserUtilsTest extends TestCase
   def testConvertLargeNumbers() : Unit =
   {
     testConvertLargeNumbers("en", "100.5 million", "100500000")
+    testConvertLargeNumbers("en", "40,543 million", "40543000000")
     testConvertLargeNumbers("de", "100,5 million", "100500000")
 
     // testConvertLargeNumbers("de", "1.234,5 mrd", "1234500000000")

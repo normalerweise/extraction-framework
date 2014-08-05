@@ -38,7 +38,8 @@ extends Extractor[TemplateNode]
                 node.setAnnotation(TemplateMapping.TEMPLATELIST_ANNOTATION, Seq(node.title.decoded))
 
                 //Extract properties
-                graph ++= mappings.flatMap(_.extract(node, subjectUri, pageContext))
+                graph ++= mappings.flatMap( what => 
+                	what.extract(node, subjectUri, pageContext))
             }
             case Some(pageClass) => //This page already has a root template.
             {

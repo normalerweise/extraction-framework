@@ -27,7 +27,6 @@ extends PageNodeExtractor
   override def extract(page : PageNode, subjectUri : String, pageContext : PageContext) : Seq[Quad] =
   {
     if(page.title.namespace != Namespace.Main && !ExtractorUtils.titleContainsCommonsMetadata(page.title)) return Seq.empty
-
     extractNode(page, subjectUri, pageContext)
   }
 
@@ -42,15 +41,18 @@ extends PageNodeExtractor
     {
       case templateNode : TemplateNode =>
       {
-        resolvedMappings.get(templateNode.title.decoded) match
+        // newline prevents template recognition
+        val templateName = templateNode.title.decoded
+        resolvedMappings.get(templateName) match
         {
-          case Some(mapping) => mapping.extract(templateNode, subjectUri, pageContext)
+          case Some(mapping) =>
+            mapping.extract(templateNode, subjectUri, pageContext)
           case None => Seq.empty
         }
       }
       case tableNode : TableNode =>
       {
-        tableMappings.flatMap(_.extract(tableNode, subjectUri, pageContext))
+       tableMappings.flatMap(_.extract(tableNode, subjectUri, pageContext))
       }
       case _ => Seq.empty
     }

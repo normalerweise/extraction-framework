@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import java.util.logging.{Logger, Level, LogRecord}
 import org.dbpedia.extraction.wikiparser._
-import org.dbpedia.extraction.dataparser.StringParser
+import org.dbpedia.extraction.dataparser.{DataParser, StringParser}
 import org.dbpedia.extraction.ontology.{Ontology, OntologyClass, OntologyProperty}
 import java.lang.IllegalArgumentException
 import org.dbpedia.extraction.util.Language
@@ -25,7 +25,8 @@ object MappingsLoader
                  def ontology : Ontology
                  def language : Language
                  def redirects : Redirects
-                 def mappingPageSource : Traversable[WikiPage] } ) : Mappings =
+                 def mappingPageSource : Traversable[WikiPage]
+                 def timexParser: DataParser } ) : Mappings =
     {
         logger.info("Loading mappings ("+context.language.wikiCode+")")
 
@@ -92,7 +93,8 @@ object MappingsLoader
     private def loadTemplateMapping(tnode : TemplateNode, context : {
                                                             def ontology : Ontology
                                                             def redirects : Redirects
-                                                            def language : Language } ) =
+                                                            def language : Language
+                                                            def timexParser: DataParser} ) =
     {
         new TemplateMapping( loadOntologyClass(tnode, "mapToClass", true, context.ontology),
                              loadOntologyClass(tnode, "correspondingClass", false, context.ontology),
@@ -104,7 +106,8 @@ object MappingsLoader
     private def loadPropertyMappings(node : TemplateNode, propertyName : String, context : {
                                                                                     def ontology : Ontology
                                                                                     def redirects : Redirects
-                                                                                    def language : Language } ) : List[PropertyMapping] =
+                                                                                    def language : Language
+                                                                                    def timexParser: DataParser }) : List[PropertyMapping] =
     {
         var mappings = List[PropertyMapping]()
 
@@ -127,7 +130,8 @@ object MappingsLoader
     private def loadPropertyMapping(tnode : TemplateNode, context : {
                                                             def ontology : Ontology
                                                             def redirects : Redirects
-                                                            def language : Language } ) = tnode.title.decoded match
+                                                            def language : Language
+                                                            def timexParser: DataParser} ) = tnode.title.decoded match
     {
         case "PropertyMapping" =>
         {
@@ -204,7 +208,8 @@ object MappingsLoader
     private def loadConditionalMapping(tnode : TemplateNode,  context : {
                                                                  def ontology : Ontology
                                                                  def redirects : Redirects
-                                                                 def language : Language } ) =
+                                                                 def language : Language
+                                                                 def timexParser: DataParser } ) =
     {
         val conditionMappings =
             for( casesProperty <- tnode.property("cases").toList;
@@ -217,7 +222,8 @@ object MappingsLoader
     private def loadConditionMapping(tnode : TemplateNode, context : {
                                                               def ontology : Ontology
                                                               def redirects : Redirects
-                                                              def language : Language } ) =
+                                                              def language : Language
+                                                              def timexParser: DataParser } ) =
     {
         //Search for the template mapping in the first template node of the mapping property
         val mapping = tnode.property("mapping").flatMap(mappingNode =>

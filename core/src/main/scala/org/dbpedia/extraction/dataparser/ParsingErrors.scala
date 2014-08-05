@@ -6,7 +6,7 @@ import collection.mutable.ArrayBuffer
  * Used to collect parsing errors.
  * Not thread-safe.
  */
-private class ParsingErrors
+class ParsingErrors
 {
     private val errors = new ArrayBuffer[String]()
 

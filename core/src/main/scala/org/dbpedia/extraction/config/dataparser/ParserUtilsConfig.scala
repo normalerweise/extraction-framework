@@ -4,6 +4,7 @@ import java.util.Locale
 
 object ParserUtilsConfig
 {
+    // extended for mte
     val scalesMap = Map(
         "en" -> Map(
             "thousand" -> 3,
@@ -13,7 +14,15 @@ object ParserUtilsConfig
             "billion" -> 9,
             "bln" -> 9,
             "trillion" -> 12,
-            "quadrillion" -> 15
+            "quadrillion" -> 15,
+             // extensions start here
+            "mrd" -> 9,
+            "b" -> 9,
+            "bn" -> 9,
+            "mil" -> 6,
+            "m" -> 6,
+            "m." -> 6,
+            "crore" -> 7
         ),
         // For "ar" configuration, rendering right-to-left may seems like a bug, but it's not.
         // Don't change this else if you know how it is done.
