@@ -162,10 +162,26 @@ class SimplePropertyMapping(
          val propertyNodeGraph = new ArrayBuffer[Quad]
         for (parseResult <- selector(parseResults)) {
           val g = parseResult match {
-            case (Some((value: Double, unit: UnitDatatype, _, _)), None) => writeUnitValue(node, value, unit, subjectUri, propertyNode.sourceUri)
-            case (Some((value, _)), None) => writeValue(value, subjectUri, propertyNode.sourceUri)
-            case (Some((value: Double, unit: UnitDatatype, _, _)), Some(timexes: (Option[String],Option[String]))) => writeTemporalUnitValue(node, value, unit, subjectUri, propertyNode.sourceUri, timexes)
-            case (Some((value, _)), Some(timexes: (Option[String],Option[String]))) => writeTemporalValue(value, subjectUri, propertyNode.sourceUri, timexes)
+            case (Some((value: Double, unit: UnitDatatype, _, _)), None) =>
+              writeUnitValue(node, value, unit, subjectUri, propertyNode.sourceUri)
+            case (Some((value: Double, unit: UnitDatatype)), None) =>
+              writeUnitValue(node, value, unit, subjectUri, propertyNode.sourceUri)
+
+            case (Some((value, _)), None) =>
+              writeValue(value, subjectUri, propertyNode.sourceUri)
+            case (Some(value), None) =>
+              writeValue(value, subjectUri, propertyNode.sourceUri)
+
+            case (Some((value: Double, unit: UnitDatatype, _, _)), Some(timexes: (Option[String],Option[String]))) =>
+              writeTemporalUnitValue(node, value, unit, subjectUri, propertyNode.sourceUri, timexes)
+            case (Some((value: Double, unit: UnitDatatype)), Some(timexes: (Option[String],Option[String]))) =>
+              writeTemporalUnitValue(node, value, unit, subjectUri, propertyNode.sourceUri, timexes)
+
+            case (Some((value, _)), Some(timexes: (Option[String],Option[String]))) =>
+              writeTemporalValue(value, subjectUri, propertyNode.sourceUri, timexes)
+            case (Some(value), Some(timexes: (Option[String],Option[String]))) =>
+              writeTemporalValue(value, subjectUri, propertyNode.sourceUri, timexes)
+              
             case _ => Seq.empty[Quad]
           }
            propertyNodeGraph ++= g
