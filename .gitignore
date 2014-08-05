@@ -5,4 +5,7 @@ target/
 *.log
 *.lck
 *.tmp
+.project
+.settings
+.classpath
 java_pid*
